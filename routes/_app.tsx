@@ -10,10 +10,8 @@ export default function App({ Component }: PageProps) {
         <title>space-trader</title>
         <link rel="stylesheet" href="/styles.css" />
       </head>
-      <body f-client-nav>
-        <Partial name="body">
-          <Component />
-        </Partial>
+      <body>
+        <Component />
       </body>
     </html>
   );

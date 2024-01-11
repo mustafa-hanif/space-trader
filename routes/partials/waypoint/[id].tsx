@@ -24,6 +24,7 @@ const getWaypoint = async (req: Request, waypoint: string) => {
   
   const data = await(await fetch(`https://api.spacetraders.io/v2/systems/${system}/waypoints/${waypoint}`, 
   options)).json();
+  
   return data.data;
 }
 
