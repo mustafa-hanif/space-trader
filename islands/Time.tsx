@@ -1,9 +1,6 @@
-import { signal, effect } from "@preact/signals";
-import { diff } from "$std/assert/_diff.ts";
+import { signal, effect, computed } from "@preact/signals";
 
-
-
-export default function Time({ isoDate }) {
+export default function Time({ isoDate, fast = false }) {
   const differenceInMinutes = signal(0);
   effect(() => {
     const intervalId = setInterval(() => {
@@ -13,9 +10,14 @@ export default function Time({ isoDate }) {
 
       const differenceInMilliseconds = date - now;
       if (differenceInMilliseconds > 0) {
-        differenceInMinutes.value = Math.floor(differenceInMilliseconds / 1000 / 60);
+        if (fast) {
+          differenceInMinutes.value = (differenceInMilliseconds / 1000).toFixed(2);
+        } else {
+          differenceInMinutes.value = (differenceInMilliseconds / 1000 / 60).toFixed(2);
+        }
+        
       }
-    }, 1000);
+    }, fast ? 10 : 1000);
 
     return () => {
       clearInterval(intervalId);
@@ -23,6 +25,6 @@ export default function Time({ isoDate }) {
   });
   
   return (
-    <div>{differenceInMinutes} minutes remaining</div>
+    <div>{differenceInMinutes} {fast ? 'seconds' : 'minutes'} remaining</div>
   );
 }
