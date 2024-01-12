@@ -1,6 +1,6 @@
 import { Handlers } from "$fresh/server.ts";
 
-import { getCookies } from "https://deno.land/std@0.211.0/http/cookie.ts";
+import { getCookies, setCookie } from "https://deno.land/std@0.211.0/http/cookie.ts";
 import Time from "../../islands/Time.tsx";
 import { Waypoint } from "../../types/waypoint.ts";
 import { ShipyardData } from "../../types/shipyard.ts";
@@ -8,6 +8,8 @@ import { Ship } from "../../types/ship.ts";
 import SecondCountdown from "../../islands/SecondCountdown.tsx";
 import { Agent, Contract } from "../../types/agent.ts";
 import { Market } from "../../types/market.ts";
+import Game from '../../islands/Game.tsx';
+import { CookieJar } from "https://deno.land/x/cookies@1.0.0/mod.ts";
 
 export const handler: Handlers = {
   async POST(req, ctx) {
@@ -87,8 +89,10 @@ export const handler: Handlers = {
             url.searchParams.set("error", data.error.message);
           } else {
             console.log(data);
-            const message = `Found ${data?.data.extraction.yield.units} of ${data?.data.extraction.yield.symbol}!`
-            url.searchParams.set("success", message);
+            if (action === "extract") {
+              const message = `Found ${data?.data.extraction.yield.units} of ${data?.data.extraction.yield.symbol}!`
+              url.searchParams.set("success", message);
+            }
           }
         } catch (e) {
           url.searchParams.set("error", e.message);
@@ -130,8 +134,28 @@ const get = async (req: Request, waypoint: string) => {
   const res = new Response(null, {
     status: 200, // See Other
   });
-  const user = cookies.token;
-  // console.log({ user });
+
+  let user = cookies.token;
+  if (user) {
+    const kv = await Deno.openKv();
+    const prefs = {
+      user,
+    };
+    const result = await kv.set(["token"], prefs);
+  } else {
+    const kv = await Deno.openKv();
+    const prefs = await kv.get(["token"]);
+    if (prefs) {
+      user = prefs.value.user;
+      const cookies = new CookieJar(req, res, {
+        keys: ["secret", "keys"],
+        secure: true,
+      });
+  
+      cookies.set("token", prefs.value.user, { signed: true });
+  
+    }
+  }
 
   const options = {
     headers: {
@@ -244,7 +268,7 @@ export default async function Waypoint(_req: Request, ctx) {
   
   const { agent, contracts, traitWaypoints, ships, myShips, marketData, typeSearch } = data;
   const navigableWaypoints = typeSearch.map((waypoint) => waypoint.symbol);
-  contracts.forEach((contract) => {
+  contracts?.forEach((contract) => {
     contract.terms.deliver.forEach((delivery) => {
       navigableWaypoints.push(delivery.destinationSymbol);
     });
@@ -528,6 +552,7 @@ export default async function Waypoint(_req: Request, ctx) {
             </div>
           )
           : null}
+          <Game ships={myShips} />
       </div>
 
       <div>

@@ -12,6 +12,7 @@ import * as $register from "./routes/register.tsx";
 import * as $start_game from "./routes/start-game.tsx";
 import * as $waypoint_id_ from "./routes/waypoint/[id].tsx";
 import * as $Counter from "./islands/Counter.tsx";
+import * as $Game from "./islands/Game.tsx";
 import * as $SecondCountdown from "./islands/SecondCountdown.tsx";
 import * as $Time from "./islands/Time.tsx";
 import { type Manifest } from "$fresh/server.ts";
@@ -30,6 +31,7 @@ const manifest = {
   },
   islands: {
     "./islands/Counter.tsx": $Counter,
+    "./islands/Game.tsx": $Game,
     "./islands/SecondCountdown.tsx": $SecondCountdown,
     "./islands/Time.tsx": $Time,
   },
